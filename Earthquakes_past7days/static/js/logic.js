@@ -32,12 +32,24 @@ let baseMaps = {
 // Create the earthquake layer for our map.
 let earthquakes = new L.layerGroup();
 
+// We define an object that contains the overlays.
+// This overlay will be visible all the time.
+let overlays = {
+	Earthquakes: earthquakes
+  };  //^DO I USE THIS OVERLAY FUNCTION OR THE ONE BELOW INCLUDING TECHTONIC PLATES?
+
 // Create the map object with center, zoom level and default layer.
 let map = L.map('mapid', {
 	center: [39.5, -98.5],
 	zoom: 3,
 	layers: [streets]
 })
+
+// Then add a control to the map that will allow the user to change
+// which layers are visible.
+L.control.layers(baseMaps, overlays).addTo(map);
+// Accessing the Toronto airline routes GeoJSON URL.
+// let torontoData = "https://raw.githubusercontent.com/emmysobieski/Mapping_Earthquakes/master/torontoRoutes.json";
 
 // Retrieve the earthquake GeoJSON data.
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function(data) {
@@ -48,8 +60,7 @@ L.geoJson(data, {
         console.log(data);
         return L.circleMarker(latlng);
       },
-    
-      // We set the style for each circleMarker using our styleInfo function.
+    // We set the style for each circleMarker using our styleInfo function.
   style: styleInfo,
     // We create a popup for each circleMarker to display the magnitude and
     //  location of the earthquake after the marker has been created and styled.
@@ -76,6 +87,7 @@ var legend = L.control({position: 'bottomright'});
 		"#ea822c",
 		"#ea2c2c",
 		];
+		labels = [];   // DO I NEED THIS?
 			
 	// Looping through our intervals to generate a label with a colored square for each interval.
 		for (var i = 0; i < magnitudes.length; i++) {
@@ -145,22 +157,24 @@ let overlays = {
 // which layers are visible.
 L.control.layers(baseMaps, overlays).addTo(map);
 
-// Retrieve the TectonicPlates GeoJSON data.
-d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").then(function(data) {
+// Retrieve the earthquake GeoJSON data.
+d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function(data) {
 // Creating a GeoJSON layer with the retrieved data.
 L.geoJson(data, {
-    color: "#d726be",
-    weight: 3,
-    // We turn each tectonic plate into a line on the map.
-    pointToLayer: function(data, latlng) {
+    // We turn each feature into a circleMarker on the map.
+    pointToLayer: function(feature, latlng) {
         console.log(data);
-        return L.LineString(latlng);
+        return L.circleMarker(latlng);
       },
-    // We set the style for tectonic plates using our styleInfo function.
-  //style: styleInfo, DO I NEED THIS???
+    // We set the style for each circleMarker using our styleInfo function.
+  style: styleInfo,
+    // We create a popup for each circleMarker to display the magnitude and
+    //  location of the earthquake after the marker has been created and styled.
+    onEachFeature: function(feature, layer) {
+    layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+  }
+}).addTo(earthquakes);
 
-}).addTo(tectonicPlates);
-});
-// Add Tectonic Plate Layer to map
-tectonicPlates.addTo(map);
+// Add Earthquake Layer to map
+earthquakes.addTo(map);
 });
